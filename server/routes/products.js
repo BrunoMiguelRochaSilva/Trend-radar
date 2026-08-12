@@ -1,0 +1,94 @@
+import { Router } from 'express';
+import {
+  getProductRanking,
+  getProductDetails,
+  getVideoRanking,
+} from '../services/kalodataService.js';
+import { clearCache } from '../utils/cache.js';
+
+export const productsRouter = Router();
+
+const SORT_FIELDS = new Set([
+  'revenue',
+  'revenue_growth_rate',
+  'sales_volumn',
+  'unit_price',
+  'live_revenue',
+  'video_revenue',
+]);
+
+function parseRange(minStr, maxStr) {
+  const min = minStr !== undefined && minStr !== '' ? Number(minStr) : undefined;
+  const max = maxStr !== undefined && maxStr !== '' ? Number(maxStr) : undefined;
+  if (min === undefined && max === undefined) return undefined;
+  const range = {};
+  if (min !== undefined && !Number.isNaN(min)) range.min = min;
+  if (max !== undefined && !Number.isNaN(max)) range.max = max;
+  return range;
+}
+
+// GET /api/products
+productsRouter.get('/', async (req, res, next) => {
+  try {
+    const { dateRange, sort, sortDir, keyword, priceMin, priceMax, revenueMin, revenueMax, refresh } =
+      req.query;
+
+    if (refresh === 'true') clearCache();
+
+    const sortField = SORT_FIELDS.has(sort) ? sort : 'revenue';
+    const sortType = sortDir === 'ASC' ? 'ASC' : 'DESC';
+
+    // Kalodata's rank-endpoint pricing is 0.1 credit per ceil(rows/100) — i.e. requesting
+    // 100 rows costs exactly the same 0.1 credit as requesting 30. So we always request the
+    // documented max (100) in one call, and the frontend displays Top 30 by default while
+    // keeping the rest available client-side to expand to Top 50/100 with no extra request.
+    const data = await getProductRanking({
+      dateRange: dateRange || 'last7Day',
+      sortField,
+      sortType,
+      pageSize: 100,
+      pageNumber: 1,
+      keyword: keyword || undefined,
+      priceRange: parseRange(priceMin, priceMax),
+      revenueRange: parseRange(revenueMin, revenueMax),
+    });
+
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/products/:id
+productsRouter.get('/:id', async (req, res, next) => {
+  try {
+    const { dateRange, refresh } = req.query;
+    if (refresh === 'true') clearCache();
+    const data = await getProductDetails({
+      productId: req.params.id,
+      dateRange: dateRange || 'last7Day',
+    });
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/products/:id/videos
+productsRouter.get('/:id/videos', async (req, res, next) => {
+  try {
+    const { dateRange, refresh } = req.query;
+    if (refresh === 'true') clearCache();
+    const data = await getVideoRanking({
+      productId: req.params.id,
+      dateRange: dateRange || 'last7Day',
+      sortField: 'revenue',
+      sortType: 'DESC',
+      pageSize: 10,
+      pageNumber: 1,
+    });
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});

@@ -96,13 +96,18 @@ export async function getProductDetails({ productId, dateRange = 'last7Day' }) {
 /**
  * POST /openapi/v1/tiktok/video/rank filtered by product_id.
  * Rate limit: 10 requests / 10 seconds.
+ * Confirmed live: page_size accepts up to 100 (same as product/rank), and Kalodata's
+ * "Rank APIs" billing (0.1 credit per ceil(rows/100)) applies here too — so default to
+ * the max per call, same reasoning as product/rank. The Video & Ad table paginates the
+ * fetched batch client-side; a genuinely new page_number only fires when a product has
+ * more videos than already fetched (see src/components/VideoAdTable.jsx).
  */
 export async function getVideoRanking({
   productId,
   dateRange = 'last7Day',
   sortField = 'revenue',
   sortType = 'DESC',
-  pageSize = 10,
+  pageSize = 100,
   pageNumber = 1,
 }) {
   if (!productId) throw new Error('productId is required');
@@ -111,7 +116,8 @@ export async function getVideoRanking({
     ...COMMON,
     date_range: dateRange,
     sort_field: { field: sortField, type: sortType },
-    page_size: pageSize,
+    // Never exceed Kalodata's confirmed max page size for this endpoint.
+    page_size: Math.min(pageSize, 100),
     page_number: pageNumber,
     product_id: productId,
   };

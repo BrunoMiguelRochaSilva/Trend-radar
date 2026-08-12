@@ -52,7 +52,8 @@ All calls are made server-side from `server/services/kalodataService.js`:
 
 - `POST /openapi/v1/tiktok/product/rank` — Top 30 product ranking (dashboard table).
 - `POST /openapi/v1/tiktok/product/detail` — full metrics for one product (detail page).
-- `POST /openapi/v1/tiktok/video/rank` — top 10 videos for a product (Popular Videos).
+- `POST /openapi/v1/tiktok/video/rank` — up to 100 videos for a product (Popular Videos top
+  10 + the full Video & Ad table, same shared call — see below).
 - `POST /openapi/v1/tiktok/video/detail` — full metrics for one video (video modal).
 
 Product details and videos are only fetched **on click** — never in bulk for all
@@ -85,6 +86,25 @@ popular videos, and video detail — each fetched lazily and cached independentl
 The backend's original 5-minute in-memory cache (`server/utils/cache.js`) is unchanged and
 still sits behind this as a second line of defense (e.g. if IndexedDB is unavailable).
 
+## Video & Ad table
+
+The Product Details page has a full-width "Video & Ad" section (`src/components/VideoAdTable.jsx`)
+below Popular Videos — a sortable, paginated table over the same `/video/rank` data, not a
+separate feature. Both sections share **one** cached page-1 call (`page_size: 100`, owned by
+`ProductDetailsPage`); the table paginates 10 rows at a time client-side with zero extra
+requests, and only fetches a genuinely new API page (`page_number: 2`, its own cache entry) if
+the user pages past a full 100-row batch. Sorting by Revenue/Views is client-side over
+already-fetched rows — never a new call. "Export CSV" downloads whatever's currently loaded,
+no server round-trip.
+
+**Video thumbnails, playable video URLs, and TikTok URLs**: confirmed empirically against the
+live API (full raw response dumps of both `/video/rank` and `/video/detail`) that neither
+endpoint returns any of these, nor a publish-date field. Rather than fabricate them, the table
+shows a placeholder tile and "—" for Item Sold/Publish Date, and clicking a video opens a
+preview modal that branches on whatever's actually present (`normalizeVideo.js`):
+a real `<video>` player if a video URL ever appears, a "View on TikTok" button if only a
+TikTok URL appears, or today's honest "Video preview unavailable" — never a fake embed.
+
 ## Project structure
 
 ```
@@ -96,13 +116,15 @@ server/            Express backend (never reachable from the browser's JS)
 
 src/                React frontend
   pages/            Dashboard/Products, ProductDetailsPage, Videos
-  components/       Table, Filters (draft/submit), KPI cards, Video cards/modal,
-                     CacheStatus, skeletons, states
+  components/       Table, Filters (draft/submit), KPI cards, VideoCard/VideoGrid,
+                     VideoAdTable, VideoDetail modal, VideoPreview, CacheStatus,
+                     skeletons, states
   hooks/useCachedQuery.js       cache-first + forced-refresh query hook
   services/api.js               talks only to our backend (/api/*)
   services/queryCache.js        persistent (IndexedDB) query cache
   utils/            normalizeProduct/Video, formatters, queryParams (cache-key builders),
-                     relativeTime, TrendRadar Score
+                     relativeTime, exportCsv, TrendRadar Score
+  constants/filterOptions.js    shared date-range option list
   mocks/            30 mock products + 10 mock videos each (dev-only fixtures)
 ```
 

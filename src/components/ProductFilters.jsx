@@ -1,10 +1,5 @@
 import { Search, RotateCcw, Check } from 'lucide-react';
-
-const DATE_RANGE_OPTIONS = [
-  { value: 'lastDay', label: 'Last Day' },
-  { value: 'last7Day', label: 'Last 7 Days' },
-  { value: 'last30Day', label: 'Last 30 Days' },
-];
+import { DATE_RANGE_OPTIONS } from '../constants/filterOptions.js';
 
 const SORT_OPTIONS = [
   { value: 'revenue', label: 'Revenue' },

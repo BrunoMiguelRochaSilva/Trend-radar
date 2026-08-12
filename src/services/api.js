@@ -64,9 +64,9 @@ export function fetchProductDetails(productId, { dateRange, refresh } = {}) {
   });
 }
 
-export function fetchProductVideos(productId, { dateRange, refresh } = {}) {
+export function fetchProductVideos(productId, { dateRange, pageSize, pageNumber, refresh } = {}) {
   return request(`/api/products/${encodeURIComponent(productId)}/videos`, {
-    params: { dateRange, refresh: refresh || undefined },
+    params: { dateRange, pageSize, pageNumber, refresh: refresh || undefined },
   });
 }
 

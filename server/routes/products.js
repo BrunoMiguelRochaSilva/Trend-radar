@@ -77,15 +77,15 @@ productsRouter.get('/:id', async (req, res, next) => {
 // GET /api/products/:id/videos
 productsRouter.get('/:id/videos', async (req, res, next) => {
   try {
-    const { dateRange, refresh } = req.query;
+    const { dateRange, pageSize, pageNumber, refresh } = req.query;
     if (refresh === 'true') clearCache();
     const data = await getVideoRanking({
       productId: req.params.id,
       dateRange: dateRange || 'last7Day',
       sortField: 'revenue',
       sortType: 'DESC',
-      pageSize: 10,
-      pageNumber: 1,
+      pageSize: pageSize ? Number(pageSize) : 100,
+      pageNumber: pageNumber ? Number(pageNumber) : 1,
     });
     res.json(data);
   } catch (err) {

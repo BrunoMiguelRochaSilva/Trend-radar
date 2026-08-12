@@ -42,10 +42,16 @@ export function normalizeVideo(raw) {
     duration: numberOrNull(raw.duration),
     revenueTrend: Array.isArray(raw.revenue_trend) ? raw.revenue_trend.map(Number) : null,
 
-    // Not present in any documented Kalodata response — never fabricated.
-    // Wired here so a real thumbnail/URL field can be dropped in later.
+    // Confirmed empirically against the LIVE API (full raw response dumps of both
+    // /video/rank and /video/detail, 2026-08-12): neither endpoint returns a thumbnail,
+    // playable video URL, TikTok URL, or publish/create date field. These stay null —
+    // never fabricated — but are wired here so a real field can be mapped in later
+    // without touching any component that reads them (VideoCard, VideoAdTable, the
+    // video preview modal all branch on these being present vs. null).
     thumbnailUrl: null,
+    videoUrl: null,
     tiktokUrl: null,
+    publishDate: null,
 
     raw,
   };

@@ -63,8 +63,12 @@ export function buildProductDetailParams(productId, dateRange = 'last7Day') {
   };
 }
 
-/** POST /openapi/v1/tiktok/video/rank, filtered by product_id */
-export function buildVideoRankParams(productId, dateRange = 'last7Day') {
+/**
+ * POST /openapi/v1/tiktok/video/rank, filtered by product_id. `pageNumber`
+ * is part of the cache key (spec §9/13) — a different page is a genuinely
+ * different query, never served from another page's cache entry.
+ */
+export function buildVideoRankParams(productId, dateRange = 'last7Day', pageNumber = 1) {
   return {
     region: REGION,
     language: LANGUAGE,
@@ -72,8 +76,8 @@ export function buildVideoRankParams(productId, dateRange = 'last7Day') {
     date_range: dateRange,
     sort_field: 'revenue',
     sort_direction: 'DESC',
-    page_size: 10,
-    page_number: 1,
+    page_size: 100,
+    page_number: pageNumber,
     product_id: productId,
   };
 }

@@ -10,6 +10,7 @@ import { useCachedQuery } from '../hooks/useCachedQuery.js';
 import { buildVideoDetailParams } from '../utils/queryParams.js';
 import ErrorState from './ErrorState.jsx';
 import CacheStatus from './CacheStatus.jsx';
+import VideoPreview from './VideoPreview.jsx';
 
 function Metric({ label, value }) {
   return (
@@ -96,6 +97,10 @@ export default function VideoDetail({ videoId, dateRange, onClose }) {
 
         {!isLoading && !isError && video && (
           <>
+            <div className="mb-4">
+              <VideoPreview video={video} />
+            </div>
+
             <p className="mb-4 text-base font-medium text-slate-900">{video.title}</p>
 
             <div className="mb-4 flex flex-wrap gap-2">

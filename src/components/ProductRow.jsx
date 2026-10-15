@@ -5,6 +5,46 @@ import { TrendingUp, TrendingDown, ImageOff } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency.js';
 import { formatNumber } from '../utils/formatNumber.js';
 import { formatPercentage } from '../utils/formatPercentage.js';
+import { VideoThumbnail } from './VideoCard.jsx';
+
+/**
+ * Top 3 revenue videos for a product, each linking to tiktok.com. Only shows
+ * videos already in the local cache (from opening the product before) — never
+ * fetches, so it never costs credits.
+ *   undefined = still reading the cache · null = product not opened yet
+ */
+function TopVideos({ videos }) {
+  if (videos === undefined) return <span className="text-sm text-slate-300">…</span>;
+  if (videos === null) {
+    return (
+      <span
+        className="text-xs text-slate-400"
+        title="Open this product once (~0.2 credits) — its top videos then show here for free"
+      >
+        Open to load
+      </span>
+    );
+  }
+  if (videos.length === 0) return <span className="text-xs text-slate-400">No videos</span>;
+
+  return (
+    <div className="flex gap-1.5">
+      {videos.map((video) => (
+        <a
+          key={video.id}
+          href={video.tiktokUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          title={`@${video.creatorHandle ?? 'creator'} · ${formatCurrency(video.revenue)} — open on TikTok`}
+          className="rounded-lg transition-transform hover:scale-110"
+        >
+          <VideoThumbnail video={video} className="h-11 w-11 rounded-lg" badges={false} />
+        </a>
+      ))}
+    </div>
+  );
+}
 
 function GrowthBadge({ value }) {
   if (value === null) return <span className="text-slate-400">—</span>;
@@ -103,7 +143,7 @@ export function ProductThumbnail({ image, name, size = 'h-11 w-11' }) {
   );
 }
 
-export default function ProductRow({ product, rank }) {
+export default function ProductRow({ product, rank, topVideos }) {
   const navigate = useNavigate();
 
   return (
@@ -138,6 +178,9 @@ export default function ProductRow({ product, rank }) {
       </td>
       <td className="whitespace-nowrap px-3 py-3.5 text-sm text-slate-600">
         {formatNumber(product.sales)}
+      </td>
+      <td className="whitespace-nowrap px-3 py-3.5">
+        <TopVideos videos={topVideos} />
       </td>
       <td className="whitespace-nowrap px-3 py-3.5 text-sm text-slate-600">
         {formatCurrency(product.unitPrice)}

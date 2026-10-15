@@ -1,5 +1,5 @@
 import { Search, RotateCcw, Check } from 'lucide-react';
-import { DATE_RANGE_OPTIONS, CATEGORY_OPTIONS } from '../constants/filterOptions.js';
+import { DATE_RANGE_OPTIONS, CATEGORY_OPTIONS, LAUNCH_DATE_OPTIONS } from '../constants/filterOptions.js';
 
 const SORT_OPTIONS = [
   { value: 'revenue', label: 'Revenue' },
@@ -42,6 +42,22 @@ export default function ProductFilters({ draftFilters, onDraftChange, onSubmit, 
           >
             <option value="">All Categories</option>
             {CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <FieldLabel>Launch Date</FieldLabel>
+          <select
+            aria-label="Launch Date"
+            value={draftFilters.launch}
+            onChange={(e) => onDraftChange({ launch: e.target.value })}
+            className={selectClass}
+          >
+            {LAUNCH_DATE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>

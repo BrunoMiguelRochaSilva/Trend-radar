@@ -55,7 +55,9 @@ export function normalizeVideo(raw) {
     // (above) is built from video_id + handle rather than taken from the response.
     thumbnailUrl: null,
     videoUrl: null,
-    publishDate: null,
+    // video/rank DOES return publish_date ("2026/10/02 10:55:36" — seen in live responses
+    // since the note above); kept as a sortable "YYYY-MM-DD" string.
+    publishDate: raw.publish_date ? String(raw.publish_date).slice(0, 10).replaceAll('/', '-') : null,
 
     raw,
   };

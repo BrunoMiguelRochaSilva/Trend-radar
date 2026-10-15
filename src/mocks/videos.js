@@ -100,6 +100,8 @@ function buildVideo(product, productIndex, videoIndex) {
     creator_debut: isoDaysAgo(200 + Math.floor(rand() * 500)),
     ad: isAd,
     ai_video: rand() > 0.85 ? 1 : 0,
+    // Same "yyyy/MM/dd HH:mm:ss" format the live video/rank returns.
+    publish_date: `${isoDaysAgo(1 + Math.floor(rand() * 90)).replaceAll('-', '/')} 12:00:00`,
 
     // --- extra fields only returned by /video/detail ---
     video_region: 'US',

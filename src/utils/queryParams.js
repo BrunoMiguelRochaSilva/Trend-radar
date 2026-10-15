@@ -30,7 +30,7 @@ function rangeOrUndefined(min, max) {
  * currently omits them from live calls (unconfirmed string format) — the
  * cache key should reflect the full query configuration regardless.
  */
-export function buildProductRankParams(filters) {
+export function buildProductRankParams(filters, pageNumber = 1) {
   const params = {
     region: REGION,
     language: LANGUAGE,
@@ -39,9 +39,10 @@ export function buildProductRankParams(filters) {
     sort_field: filters.sort,
     sort_direction: filters.sortDir,
     page_size: 100,
-    page_number: 1,
+    page_number: pageNumber,
   };
   if (filters.category) params.category_ids = [filters.category];
+  if (filters.launch) params.launch_date = filters.launch;
   if (filters.keyword) params.keyword = filters.keyword;
 
   const revenueRange = rangeOrUndefined(filters.revenueMin, filters.revenueMax);
@@ -81,6 +82,26 @@ export function buildVideoRankParams(productId, dateRange = 'last7Day', pageNumb
     page_number: pageNumber,
     product_id: productId,
   };
+}
+
+/**
+ * POST /openapi/v1/tiktok/video/rank across all products — the Videos page.
+ * Mirrors server/routes/videos.js (GET /api/videos).
+ */
+export function buildVideoListParams(filters, pageNumber = 1) {
+  const params = {
+    region: REGION,
+    language: LANGUAGE,
+    currency: CURRENCY,
+    date_range: filters.dateRange,
+    sort_field: filters.sort,
+    sort_direction: 'DESC',
+    page_size: 100,
+    page_number: pageNumber,
+  };
+  if (filters.category) params.category_ids = [filters.category];
+  if (filters.keyword) params.keyword = filters.keyword;
+  return params;
 }
 
 /** POST /openapi/v1/tiktok/video/detail */

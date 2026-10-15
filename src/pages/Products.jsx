@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PackageSearch } from 'lucide-react';
 import Header from '../components/Header.jsx';
@@ -9,6 +9,7 @@ import CacheStatus from '../components/CacheStatus.jsx';
 import { ProductTableSkeleton } from '../components/LoadingSkeleton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorState from '../components/ErrorState.jsx';
+import { PAGE_SIZE, MAX_API_PAGES, PagerBar, useCachedPages } from '../components/Pager.jsx';
 import { fetchProducts } from '../services/api.js';
 import { normalizeProducts } from '../utils/normalizeProduct.js';
 import { useCachedQuery } from '../hooks/useCachedQuery.js';
@@ -19,6 +20,7 @@ const DEFAULT_FILTERS = {
   sort: 'revenue',
   sortDir: 'DESC',
   category: '',
+  launch: '',
   keyword: '',
   priceMin: '',
   priceMax: '',
@@ -57,6 +59,9 @@ export default function Products({ onMenuClick }) {
   // Purely client-side — re-slices the already-fetched (up to 100) rows,
   // never triggers a new Kalodata request.
   const [displayCount, setDisplayCount] = useState(30);
+  // Page of the Kalodata ranking (100 products each, up to 5) — one call per page. Kept in
+  // the URL so coming back from a product page lands on the same page.
+  const page = Math.min(Math.max(1, Number(searchParams.get('page')) || 1), MAX_API_PAGES);
 
   const hasPendingChanges = JSON.stringify(draftFilters) !== JSON.stringify(appliedFilters);
 
@@ -71,12 +76,36 @@ export default function Products({ onMenuClick }) {
     fromCache,
   } = useCachedQuery({
     endpoint: 'product/rank',
-    params: buildProductRankParams(appliedFilters),
-    fetcher: (forceRefresh) => fetchProducts({ ...appliedFilters, refresh: forceRefresh || undefined }),
+    params: buildProductRankParams(appliedFilters, page),
+    fetcher: (forceRefresh) =>
+      fetchProducts({ ...appliedFilters, pageNumber: page, refresh: forceRefresh || undefined }),
   });
+
+  const cachedPages = useCachedPages(
+    'product/rank',
+    (p) => buildProductRankParams(appliedFilters, p),
+    `${JSON.stringify(appliedFilters)}|${updatedAt?.getTime()}`
+  );
 
   const allProducts = normalizeProducts(response?.data);
   const products = allProducts.slice(0, displayCount);
+  const rowStart = (page - 1) * PAGE_SIZE;
+  // A page shorter than 100 is the real end of the ranking — remembered per filter set, so
+  // pages past it stay hidden (no paying for empty pages) after moving back to earlier ones.
+  const endPageRef = useRef({});
+  const filtersKey = JSON.stringify(appliedFilters);
+  if (!isLoading && !isError && response && allProducts.length < PAGE_SIZE) {
+    endPageRef.current[filtersKey] = Math.min(endPageRef.current[filtersKey] ?? MAX_API_PAGES, page);
+  }
+  const lastPage = Math.max(page, endPageRef.current[filtersKey] ?? MAX_API_PAGES);
+
+  function goToPage(next) {
+    const params = new URLSearchParams(searchParams);
+    const target = Math.min(Math.max(1, next), lastPage);
+    if (target > 1) params.set('page', String(target));
+    else params.delete('page');
+    setSearchParams(params);
+  }
 
   function handleDraftChange(patch) {
     setDraftFilters((prev) => ({ ...prev, ...patch }));
@@ -113,11 +142,13 @@ export default function Products({ onMenuClick }) {
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
             <div>
               <h2 className="text-base font-semibold text-slate-900">
-                Top {products.length} Products
+                {page === 1
+                  ? `Top ${products.length} Products`
+                  : `Products #${rowStart + 1}–#${rowStart + products.length}`}
               </h2>
               <p className="mt-0.5 text-xs text-slate-400">
-                Each submitted query fetches up to 100 ranked products in a single Kalodata call —
-                switching "Show" re-ranks instantly from that same batch, no extra request.
+                Each page is one Kalodata call of 100 ranked products — switching "Show" re-slices
+                that same page instantly, no extra request.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -131,7 +162,7 @@ export default function Products({ onMenuClick }) {
                 >
                   {DISPLAY_COUNT_OPTIONS.map((n) => (
                     <option key={n} value={n}>
-                      Top {n}
+                      {n} rows
                     </option>
                   ))}
                 </select>
@@ -146,6 +177,18 @@ export default function Products({ onMenuClick }) {
             </div>
           </div>
 
+          <PagerBar
+            itemLabel="products"
+            isLoading={isLoading}
+            rowStart={rowStart}
+            count={allProducts.length}
+            page={page}
+            lastPage={lastPage}
+            cachedPages={cachedPages}
+            onPageChange={goToPage}
+            className="mb-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-card"
+          />
+
           {isLoading && <ProductTableSkeleton rows={12} />}
 
           {isError && (
@@ -156,11 +199,17 @@ export default function Products({ onMenuClick }) {
             <EmptyState
               icon={PackageSearch}
               title="No products found"
-              message="Try adjusting your filters and clicking Submit."
+              message={
+                page > 1
+                  ? `Kalodata returned no products for page ${page} — the ranking ends earlier.`
+                  : 'Try adjusting your filters and clicking Submit.'
+              }
             />
           )}
 
-          {!isLoading && !isError && products.length > 0 && <ProductTable products={products} />}
+          {!isLoading && !isError && products.length > 0 && (
+            <ProductTable products={products} dateRange={appliedFilters.dateRange} rankOffset={rowStart} />
+          )}
         </div>
       </div>
     </div>

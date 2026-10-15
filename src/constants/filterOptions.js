@@ -8,6 +8,34 @@ export const DATE_RANGE_OPTIONS = [
   { value: 'last30Day', label: 'Last 30 Days' },
 ];
 
+// video/rank sort fields (the set the KaloData CLI allows for `video rank --sort`).
+export const VIDEO_SORT_OPTIONS = [
+  { value: 'revenue', label: 'Revenue' },
+  { value: 'views', label: 'Views' },
+  { value: 'revenue_growth_rate', label: 'Revenue Growth' },
+  { value: 'ads_roas', label: 'Ad ROAS' },
+];
+
+// Videos page "Published" windows (days). video/rank has no publish-date filter, so this
+// is applied locally to the videos already loaded — changing it never costs credits.
+export const PUBLISHED_OPTIONS = [
+  { value: '', label: 'Any time' },
+  { value: '3', label: 'Last 3 days' },
+  { value: '7', label: 'Last 7 days' },
+  { value: '30', label: 'Last 30 days' },
+  { value: '90', label: 'Last 90 days' },
+];
+
+// product/rank `launch_date` — the only launch windows the Open API accepts. Confirmed live:
+// "launch_date must be equals <3 or <7 or <30" (the KaloData CLI's ">30" is rejected).
+// '' = no launch filter.
+export const LAUNCH_DATE_OPTIONS = [
+  { value: '', label: 'Any time' },
+  { value: '<3', label: 'Last 3 days' },
+  { value: '<7', label: 'Last 7 days' },
+  { value: '<30', label: 'Last 30 days' },
+];
+
 // Kalodata's level-1 TikTok Shop (US) categories — ids are the `data-path-key`
 // values from Kalodata's own category picker, sent as product/rank `category_ids`.
 export const CATEGORY_OPTIONS = [

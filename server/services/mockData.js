@@ -80,6 +80,13 @@ export async function getMockProductRanking(body) {
   if (body.category_ids?.length) {
     items = items.filter((p) => body.category_ids.includes(MOCK_PRODUCT_CATEGORY[p.product_name]));
   }
+  if (body.launch_date) {
+    const [op, days] = [body.launch_date[0], Number(body.launch_date.slice(1))];
+    items = items.filter((p) => {
+      const age = (Date.now() - new Date(p.launch_date).getTime()) / 86_400_000;
+      return op === '<' ? age < days : age > days;
+    });
+  }
   if (body.keyword) {
     const q = body.keyword.toLowerCase();
     items = items.filter((p) => p.product_name.toLowerCase().includes(q));
@@ -104,7 +111,18 @@ export async function getMockProductDetails(body) {
 }
 
 export async function getMockVideoRanking(body) {
-  const items = findMockVideosByProduct(body.product_id);
+  let items = body.product_id ? findMockVideosByProduct(body.product_id) : mockVideos;
+
+  if (body.category_ids?.length) {
+    items = items.filter((v) =>
+      body.category_ids.includes(MOCK_PRODUCT_CATEGORY[findMockProduct(v.product_id)?.product_name])
+    );
+  }
+  if (body.keyword) {
+    const q = body.keyword.toLowerCase();
+    items = items.filter((v) => v.video_title.toLowerCase().includes(q));
+  }
+
   const data = sortAndPaginate(items, { ...body, page_size: body.page_size || 10 });
   return { success: true, data };
 }

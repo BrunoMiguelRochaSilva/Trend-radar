@@ -48,11 +48,13 @@ async function request(path, { params } = {}) {
  * @param {string} [filters.sort] - e.g. 'revenue', 'sales_volumn'
  * @param {string} [filters.sortDir] - 'ASC' | 'DESC'
  * @param {string} [filters.category] - Kalodata category id (see CATEGORY_OPTIONS)
+ * @param {string} [filters.launch] - '<3' | '<7' | '<30' launched within N days (see LAUNCH_DATE_OPTIONS)
  * @param {string} [filters.keyword]
  * @param {number} [filters.priceMin]
  * @param {number} [filters.priceMax]
  * @param {number} [filters.revenueMin]
  * @param {number} [filters.revenueMax]
+ * @param {number} [filters.pageNumber] - 1–5, 100 products per page
  * @param {boolean} [filters.refresh] - bypass server cache
  */
 export function fetchProducts(filters = {}) {
@@ -68,6 +70,13 @@ export function fetchProductDetails(productId, { dateRange, refresh } = {}) {
 export function fetchProductVideos(productId, { dateRange, pageSize, pageNumber, refresh } = {}) {
   return request(`/api/products/${encodeURIComponent(productId)}/videos`, {
     params: { dateRange, pageSize, pageNumber, refresh: refresh || undefined },
+  });
+}
+
+/** Video ranking across all products (Videos page) — one call = 100 videos, ~0.1 credits. */
+export function fetchVideoRanking({ dateRange, sort, category, keyword, pageNumber, refresh } = {}) {
+  return request('/api/videos', {
+    params: { dateRange, sort, category, keyword, pageNumber, refresh: refresh || undefined },
   });
 }
 

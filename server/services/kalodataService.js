@@ -3,7 +3,7 @@
 // (validated) Kalodata response — normalization into our own shape happens
 // on the frontend (src/utils/normalizeProduct.js, normalizeVideo.js).
 
-import { postKalodata, getKalodata } from './kalodataClient.js';
+import { postKalodata, getKalodata, KalodataApiError } from './kalodataClient.js';
 import { withCache, cacheKey } from '../utils/cache.js';
 import {
   getMockProductRanking,
@@ -33,6 +33,7 @@ export async function getProductRanking({
   pageSize = 100,
   pageNumber = 1,
   categoryIds,
+  launchDate,
   keyword,
   priceRange,
   revenueRange,
@@ -48,6 +49,8 @@ export async function getProductRanking({
   };
   // Array of id strings, e.g. ["601739"] — same shape the KaloData CLI sends for --category.
   if (categoryIds?.length) body.category_ids = categoryIds;
+  // '<3' | '<7' | '<30' (launched within that many days), sent as-is.
+  if (launchDate) body.launch_date = launchDate;
   if (keyword) body.keyword = keyword;
 
   if (isMockMode()) {
@@ -98,7 +101,9 @@ export async function getProductDetails({ productId, dateRange = 'last7Day' }) {
 }
 
 /**
- * POST /openapi/v1/tiktok/video/rank filtered by product_id.
+ * POST /openapi/v1/tiktok/video/rank — filtered by product_id (product page), or across
+ * all products by category / keyword (Videos page). `revenue` in the response is what
+ * each video earned within `date_range`.
  * Rate limit: 10 requests / 10 seconds.
  * Confirmed live: page_size accepts up to 100 (same as product/rank), and Kalodata's
  * "Rank APIs" billing (0.1 credit per ceil(rows/100)) applies here too — so default to
@@ -108,14 +113,14 @@ export async function getProductDetails({ productId, dateRange = 'last7Day' }) {
  */
 export async function getVideoRanking({
   productId,
+  categoryIds,
+  keyword,
   dateRange = 'last7Day',
   sortField = 'revenue',
   sortType = 'DESC',
   pageSize = 100,
   pageNumber = 1,
 }) {
-  if (!productId) throw new Error('productId is required');
-
   const body = {
     ...COMMON,
     date_range: dateRange,
@@ -123,13 +128,22 @@ export async function getVideoRanking({
     // Never exceed Kalodata's confirmed max page size for this endpoint.
     page_size: Math.min(pageSize, 100),
     page_number: pageNumber,
-    product_id: productId,
   };
+  if (productId) body.product_id = productId;
+  if (categoryIds?.length) body.category_ids = categoryIds;
+  if (keyword) body.keyword = keyword;
 
   if (isMockMode()) return getMockVideoRanking(body);
 
   const key = cacheKey('video/rank', body);
-  return withCache(key, CACHE_TTL_MS, () => postKalodata('/openapi/v1/tiktok/video/rank', body));
+  try {
+    return await withCache(key, CACHE_TTL_MS, () => postKalodata('/openapi/v1/tiktok/video/rank', body));
+  } catch (err) {
+    // A product (or filter) with no videos comes back as an error — "video not found".
+    // That's a definitive empty result, not a failure (the KaloData CLI treats it the same).
+    if (err instanceof KalodataApiError && /not found/i.test(err.message)) return { success: true, data: [] };
+    throw err;
+  }
 }
 
 /**

@@ -7,7 +7,6 @@ import { normalizeVideos } from '../utils/normalizeVideo.js';
 import ProductDetails from '../components/ProductDetails.jsx';
 import VideoGrid from '../components/VideoGrid.jsx';
 import VideoAdTable from '../components/VideoAdTable.jsx';
-import VideoDetail from '../components/VideoDetail.jsx';
 import CacheStatus from '../components/CacheStatus.jsx';
 import { ProductDetailsSkeleton } from '../components/LoadingSkeleton.jsx';
 import ErrorState from '../components/ErrorState.jsx';
@@ -19,7 +18,6 @@ export default function ProductDetailsPage({ onMenuClick }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState('last7Day');
-  const [selectedVideoId, setSelectedVideoId] = useState(null);
 
   // Opening the same product again (this session or a future one) is served
   // from cache — 0 Kalodata calls — until Refresh is explicitly clicked.
@@ -128,27 +126,18 @@ export default function ProductDetailsPage({ onMenuClick }) {
               onRefresh={videoPage1Query.refresh}
               updatedAt={videoPage1Query.updatedAt}
               fromCache={videoPage1Query.fromCache}
-              onOpenVideo={setSelectedVideoId}
             />
 
             <VideoAdTable
               key={`${id}-${dateRange}`}
               productId={id}
               dateRange={dateRange}
+              videoCount={product?.videoNumber}
               page1Query={videoPage1Query}
-              onOpenVideo={setSelectedVideoId}
             />
           </>
         )}
       </div>
-
-      {selectedVideoId && (
-        <VideoDetail
-          videoId={selectedVideoId}
-          dateRange={dateRange}
-          onClose={() => setSelectedVideoId(null)}
-        />
-      )}
     </div>
   );
 }

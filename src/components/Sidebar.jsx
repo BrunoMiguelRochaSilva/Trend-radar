@@ -12,6 +12,7 @@ import {
   Settings,
   X,
 } from 'lucide-react';
+import CreditBalance from './CreditBalance.jsx';
 
 const primaryLinks = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -75,7 +76,8 @@ export default function Sidebar({ isOpen, onClose }) {
 
       <aside
         className={[
-          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 lg:static lg:translate-x-0',
+          // Desktop: pinned at viewport height so it never grows with long pages (nav scrolls inside).
+          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
@@ -95,6 +97,10 @@ export default function Sidebar({ isOpen, onClose }) {
           >
             <X className="h-5 w-5" />
           </button>
+        </div>
+
+        <div className="px-3 pb-4">
+          <CreditBalance />
         </div>
 
         <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-6">

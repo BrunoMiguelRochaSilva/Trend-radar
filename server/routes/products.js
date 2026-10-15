@@ -30,13 +30,25 @@ function parseRange(minStr, maxStr) {
 // GET /api/products
 productsRouter.get('/', async (req, res, next) => {
   try {
-    const { dateRange, sort, sortDir, keyword, priceMin, priceMax, revenueMin, revenueMax, refresh } =
-      req.query;
+    const {
+      dateRange,
+      sort,
+      sortDir,
+      category,
+      keyword,
+      priceMin,
+      priceMax,
+      revenueMin,
+      revenueMax,
+      refresh,
+    } = req.query;
 
     if (refresh === 'true') clearCache();
 
     const sortField = SORT_FIELDS.has(sort) ? sort : 'revenue';
     const sortType = sortDir === 'ASC' ? 'ASC' : 'DESC';
+    // Kalodata category ids are purely numeric — anything else is dropped rather than forwarded.
+    const categoryIds = /^\d+$/.test(category || '') ? [category] : undefined;
 
     // Kalodata's rank-endpoint pricing is 0.1 credit per ceil(rows/100) — i.e. requesting
     // 100 rows costs exactly the same 0.1 credit as requesting 30. So we always request the
@@ -48,6 +60,7 @@ productsRouter.get('/', async (req, res, next) => {
       sortType,
       pageSize: 100,
       pageNumber: 1,
+      categoryIds,
       keyword: keyword || undefined,
       priceRange: parseRange(priceMin, priceMax),
       revenueRange: parseRange(revenueMin, revenueMax),

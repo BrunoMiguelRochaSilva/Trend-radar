@@ -47,6 +47,7 @@ async function request(path, { params } = {}) {
  * @param {string} [filters.dateRange] - 'lastDay' | 'last7Day' | 'last30Day'
  * @param {string} [filters.sort] - e.g. 'revenue', 'sales_volumn'
  * @param {string} [filters.sortDir] - 'ASC' | 'DESC'
+ * @param {string} [filters.category] - Kalodata category id (see CATEGORY_OPTIONS)
  * @param {string} [filters.keyword]
  * @param {number} [filters.priceMin]
  * @param {number} [filters.priceMax]
@@ -74,6 +75,11 @@ export function fetchVideoDetails(videoId, { dateRange, refresh } = {}) {
   return request(`/api/videos/${encodeURIComponent(videoId)}`, {
     params: { dateRange, refresh: refresh || undefined },
   });
+}
+
+/** Remaining Kalodata credits — free, spends nothing. `mock: true` in mock mode. */
+export function fetchCreditBalance() {
+  return request('/api/credits');
 }
 
 export { ApiError };

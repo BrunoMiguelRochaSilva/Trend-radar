@@ -41,6 +41,7 @@ export function buildProductRankParams(filters) {
     page_size: 100,
     page_number: 1,
   };
+  if (filters.category) params.category_ids = [filters.category];
   if (filters.keyword) params.keyword = filters.keyword;
 
   const revenueRange = rangeOrUndefined(filters.revenueMin, filters.revenueMax);

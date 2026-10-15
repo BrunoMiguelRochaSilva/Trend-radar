@@ -19,7 +19,6 @@ export default function VideoGrid({
   onRefresh,
   updatedAt,
   fromCache,
-  onOpenVideo,
 }) {
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-card">
@@ -54,7 +53,7 @@ export default function VideoGrid({
       {!isLoading && !isError && videos.length > 0 && (
         <div className="scrollbar-thin flex gap-4 overflow-x-auto pb-2">
           {videos.map((video) => (
-            <VideoCard key={video.id} video={video} onOpenDetails={(v) => onOpenVideo(v.id)} />
+            <VideoCard key={video.id} video={video} />
           ))}
         </div>
       )}

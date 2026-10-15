@@ -3,13 +3,14 @@
 // (validated) Kalodata response — normalization into our own shape happens
 // on the frontend (src/utils/normalizeProduct.js, normalizeVideo.js).
 
-import { postKalodata } from './kalodataClient.js';
+import { postKalodata, getKalodata } from './kalodataClient.js';
 import { withCache, cacheKey } from '../utils/cache.js';
 import {
   getMockProductRanking,
   getMockProductDetails,
   getMockVideoRanking,
   getMockVideoDetails,
+  getMockCreditBalance,
 } from './mockData.js';
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -31,6 +32,7 @@ export async function getProductRanking({
   sortType = 'DESC',
   pageSize = 100,
   pageNumber = 1,
+  categoryIds,
   keyword,
   priceRange,
   revenueRange,
@@ -44,6 +46,8 @@ export async function getProductRanking({
     page_number: pageNumber,
     need_image: 1,
   };
+  // Array of id strings, e.g. ["601739"] — same shape the KaloData CLI sends for --category.
+  if (categoryIds?.length) body.category_ids = categoryIds;
   if (keyword) body.keyword = keyword;
 
   if (isMockMode()) {
@@ -146,4 +150,14 @@ export async function getVideoDetails({ videoId, dateRange = 'last7Day' }) {
 
   const key = cacheKey('video/detail', body);
   return withCache(key, CACHE_TTL_MS, () => postKalodata('/openapi/v1/tiktok/video/detail', body));
+}
+
+/**
+ * GET /openapi/v1/credit/balance → { totalRemain, mainRemain, subRemain? }.
+ * Free — checking the balance spends no credits. Deliberately not cached, so the
+ * sidebar always shows the live balance right after a paid query.
+ */
+export async function getCreditBalance() {
+  if (isMockMode()) return getMockCreditBalance();
+  return getKalodata('/openapi/v1/credit/balance');
 }

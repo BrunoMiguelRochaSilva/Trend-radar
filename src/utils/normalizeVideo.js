@@ -16,6 +16,10 @@ export function normalizeVideo(raw) {
   return {
     id: raw.video_id,
     title: raw.video_title || 'Untitled video',
+    // Public TikTok page — TikTok resolves it by video id; the handle just makes it canonical.
+    tiktokUrl: raw.video_id
+      ? `https://www.tiktok.com/@${raw.belonged_creator_handle || ''}/video/${raw.video_id}`
+      : null,
     creatorId: raw.belonged_creator_id ?? null,
     creatorHandle: raw.belonged_creator_handle || null,
     creatorDebut: raw.creator_debut ?? null,
@@ -47,10 +51,10 @@ export function normalizeVideo(raw) {
     // playable video URL, TikTok URL, or publish/create date field. These stay null —
     // never fabricated — but are wired here so a real field can be mapped in later
     // without touching any component that reads them (VideoCard, VideoAdTable, the
-    // video preview modal all branch on these being present vs. null).
+    // video preview modal all branch on these being present vs. null). `tiktokUrl`
+    // (above) is built from video_id + handle rather than taken from the response.
     thumbnailUrl: null,
     videoUrl: null,
-    tiktokUrl: null,
     publishDate: null,
 
     raw,

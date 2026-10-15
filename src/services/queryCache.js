@@ -16,6 +16,9 @@
 const DB_NAME = 'trendradar-query-cache';
 const DB_VERSION = 1;
 const STORE_NAME = 'queries';
+// 'mock' | 'live', injected by vite.config.js from USE_MOCK_DATA. Part of every key so
+// flipping modes never serves results cached under the other mode.
+const DATA_MODE = typeof __DATA_MODE__ !== 'undefined' ? __DATA_MODE__ : 'live';
 
 let dbPromise = null;
 // In-memory fallback for environments without IndexedDB (private browsing
@@ -73,7 +76,7 @@ function canonicalize(value) {
  * regardless of key order or how the params object was built.
  */
 export function buildQueryKey(endpoint, params) {
-  return `${endpoint}::${JSON.stringify(canonicalize(params))}`;
+  return `${DATA_MODE}:${endpoint}::${JSON.stringify(canonicalize(params))}`;
 }
 
 /** @returns {Promise<{queryKey, endpoint, params, payload, rowCount, createdAt, updatedAt} | undefined>} */

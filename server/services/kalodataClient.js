@@ -60,14 +60,14 @@ const client = axios.create({
 });
 
 /**
- * POST to a Kalodata Open Center endpoint and return the parsed JSON body.
+ * Call a Kalodata Open Center endpoint and return the parsed JSON body.
  * Validates `success` per the documented response envelope; never leaks the
  * API key or its header name in thrown errors.
  */
-export async function postKalodata(path, body) {
+async function requestKalodata(method, path, body) {
   let response;
   try {
-    response = await client.post(path, body, { headers: buildAuthHeaders() });
+    response = await client.request({ method, url: path, data: body, headers: buildAuthHeaders() });
   } catch (err) {
     if (err instanceof KalodataApiError) throw err;
 
@@ -130,4 +130,12 @@ export async function postKalodata(path, body) {
   }
 
   return data;
+}
+
+export function postKalodata(path, body) {
+  return requestKalodata('post', path, body);
+}
+
+export function getKalodata(path) {
+  return requestKalodata('get', path);
 }

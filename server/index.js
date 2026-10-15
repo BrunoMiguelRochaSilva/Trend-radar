@@ -12,6 +12,7 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 import { productsRouter } from './routes/products.js';
 import { videosRouter } from './routes/videos.js';
+import { creditsRouter } from './routes/credits.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -27,6 +28,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/products', productsRouter);
 app.use('/api/videos', videosRouter);
+app.use('/api/credits', creditsRouter);
 
 app.use('/api', notFoundHandler);
 app.use(errorHandler);

@@ -15,6 +15,42 @@ import { mockProducts, findMockProduct } from '../../src/mocks/products.js';
 import { mockVideos, findMockVideosByProduct, findMockVideo } from '../../src/mocks/videos.js';
 import { KalodataApiError } from './kalodataClient.js';
 
+// Mock-only category assignment for the 30 fixture products (keyed by name, ids from
+// src/constants/filterOptions.js CATEGORY_OPTIONS). Kept here rather than on the fixtures
+// themselves, since those mirror the real rank response field-for-field.
+const MOCK_PRODUCT_CATEGORY = {
+  'Wireless Bluetooth Earbuds Pro': '601739',
+  'RGB LED Strip Lights 32ft': '604968',
+  'Posture Corrector Back Brace': '700645',
+  'Portable USB Blender Bottle': '600024',
+  'Mini Skincare Fridge': '600942',
+  'Resistance Bands Set (5pc)': '603014',
+  'Mini Waffle Maker': '600942',
+  'Handheld Cordless Car Vacuum': '605196',
+  'Magnetic Car Phone Mount': '605196',
+  'Sonic Electric Toothbrush': '601450',
+  'Hair Straightener Brush': '601450',
+  'Silicone Pet Grooming Glove': '602118',
+  'Insulated Stainless Tumbler 32oz': '600024',
+  'Electric Knife Sharpener': '600024',
+  'Facial Ice Roller Set': '601450',
+  'Collagen Under-Eye Patches': '601450',
+  'Marine Collagen Powder': '700645',
+  'Jade Facial Roller & Gua Sha': '601450',
+  'Foldable Wireless Charger Stand': '601739',
+  'Mini Bluetooth Speaker': '601739',
+  'Smart Reminder Water Bottle': '603014',
+  'Shiatsu Neck & Shoulder Massager': '700645',
+  'LED Makeup Mirror with Lights': '601450',
+  'Reusable Silicone Baking Mats': '600024',
+  'Expandable Garden Hose 50ft': '604968',
+  'Adjustable Foldable Laptop Stand': '601755',
+  'Mini Portable Projector': '601739',
+  'Reusable Air Fryer Liners (Set)': '600024',
+  'Graduated Compression Socks': '700645',
+  'Calming Anxiety Vest for Dogs': '602118',
+};
+
 function applyRange(value, range) {
   if (!range) return true;
   const { min, max } = range;
@@ -41,6 +77,9 @@ function sortAndPaginate(items, { sort_field, page_size, page_number }) {
 export async function getMockProductRanking(body) {
   let items = mockProducts;
 
+  if (body.category_ids?.length) {
+    items = items.filter((p) => body.category_ids.includes(MOCK_PRODUCT_CATEGORY[p.product_name]));
+  }
   if (body.keyword) {
     const q = body.keyword.toLowerCase();
     items = items.filter((p) => p.product_name.toLowerCase().includes(q));
@@ -76,4 +115,10 @@ export async function getMockVideoDetails(body) {
     throw new KalodataApiError('Video not found.', { code: 'NOT_FOUND', status: 404 });
   }
   return { success: true, data: video };
+}
+
+// Mock mode spends no credits, so there is no balance to report — the `mock` flag lets
+// the UI say so instead of showing a made-up number.
+export async function getMockCreditBalance() {
+  return { success: true, mock: true, data: null };
 }

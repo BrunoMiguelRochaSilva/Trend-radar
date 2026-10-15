@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { buildQueryKey, getCachedQuery, setCachedQuery } from '../services/queryCache.js';
 
 /**
@@ -19,6 +19,7 @@ import { buildQueryKey, getCachedQuery, setCachedQuery } from '../services/query
  */
 export function useCachedQuery({ endpoint, params, fetcher, enabled = true }) {
   const forceRef = useRef(false);
+  const queryClient = useQueryClient();
   const queryKey = buildQueryKey(endpoint, params);
 
   const query = useQuery({
@@ -33,6 +34,8 @@ export function useCachedQuery({ endpoint, params, fetcher, enabled = true }) {
       }
 
       const payload = await fetcher(forceRefresh);
+      // A real network fetch may have spent credits — have the sidebar balance re-check.
+      queryClient.invalidateQueries({ queryKey: ['credit-balance'] });
       const rowCount = Array.isArray(payload?.data) ? payload.data.length : payload?.data ? 1 : 0;
       const entry = await setCachedQuery(queryKey, { endpoint, params, payload, rowCount });
       return { ...entry, fromCache: false };

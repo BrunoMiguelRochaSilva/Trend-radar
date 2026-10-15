@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { X, Heart, MessageCircle, Share2, Megaphone, Sparkles, PlayCircle } from 'lucide-react';
+import { X, Heart, MessageCircle, Share2, Megaphone, Sparkles, PlayCircle, ExternalLink } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { fetchVideoDetails } from '../services/api.js';
 import { normalizeVideo } from '../utils/normalizeVideo.js';
@@ -11,6 +11,7 @@ import { buildVideoDetailParams } from '../utils/queryParams.js';
 import ErrorState from './ErrorState.jsx';
 import CacheStatus from './CacheStatus.jsx';
 import VideoPreview from './VideoPreview.jsx';
+import { VideoTitleLink } from './VideoCard.jsx';
 
 function Metric({ label, value }) {
   return (
@@ -101,7 +102,12 @@ export default function VideoDetail({ videoId, dateRange, onClose }) {
               <VideoPreview video={video} />
             </div>
 
-            <p className="mb-4 text-base font-medium text-slate-900">{video.title}</p>
+            <p className="mb-4 text-base font-medium text-slate-900">
+              <VideoTitleLink video={video}>
+                {video.title}
+                {video.tiktokUrl && <ExternalLink className="ml-1.5 inline h-3.5 w-3.5 align-baseline text-slate-400" />}
+              </VideoTitleLink>
+            </p>
 
             <div className="mb-4 flex flex-wrap gap-2">
               {video.isAd && (

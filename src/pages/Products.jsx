@@ -18,6 +18,7 @@ const DEFAULT_FILTERS = {
   dateRange: 'last7Day',
   sort: 'revenue',
   sortDir: 'DESC',
+  category: '',
   keyword: '',
   priceMin: '',
   priceMax: '',

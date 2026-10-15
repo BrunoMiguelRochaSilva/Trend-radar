@@ -1,4 +1,4 @@
-import { PlayCircle, Heart, MessageCircle, Share2, Sparkles, Megaphone } from 'lucide-react';
+import { PlayCircle, Heart, MessageCircle, Share2, Sparkles, Megaphone, ExternalLink } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency.js';
 import { formatNumber } from '../utils/formatNumber.js';
 import { formatPercentage } from '../utils/formatPercentage.js';
@@ -37,14 +37,43 @@ export function VideoThumbnail({ video, className = 'h-36 w-full', badges = true
   );
 }
 
-export default function VideoCard({ video, onOpenDetails }) {
+/**
+ * A video title that opens the video on tiktok.com in a new tab. Stops the
+ * click from also reaching a parent row/card (which opens our own preview).
+ */
+export function VideoTitleLink({ video, className = '', children }) {
+  if (!video.tiktokUrl) return <span className={className}>{children ?? video.title}</span>;
   return (
-    <div className="flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-popover">
+    <a
+      href={video.tiktokUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      title={`${video.title} — open on TikTok`}
+      className={`hover:text-brand-700 hover:underline ${className}`}
+    >
+      {children ?? video.title}
+    </a>
+  );
+}
+
+// The whole card is a link to the video on tiktok.com (new tab).
+export default function VideoCard({ video }) {
+  const Wrapper = video.tiktokUrl ? 'a' : 'div';
+  const linkProps = video.tiktokUrl
+    ? { href: video.tiktokUrl, target: '_blank', rel: 'noopener noreferrer', title: `${video.title} — open on TikTok` }
+    : {};
+
+  return (
+    <Wrapper
+      {...linkProps}
+      className="group flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-popover"
+    >
       <VideoThumbnail video={video} className="h-36 w-full rounded-none" />
 
       <div className="flex flex-1 flex-col gap-2 p-4">
         <p className="text-xs font-semibold text-brand-600">@{video.creatorHandle ?? 'creator'}</p>
-        <p className="line-clamp-2 text-sm font-medium text-slate-900">{video.title}</p>
+        <p className="line-clamp-2 text-sm font-medium text-slate-900 group-hover:text-brand-700">{video.title}</p>
 
         <div className="flex items-baseline justify-between">
           <span className="text-base font-semibold text-slate-900">
@@ -79,13 +108,12 @@ export default function VideoCard({ video, onOpenDetails }) {
           </span>
         )}
 
-        <button
-          onClick={() => onOpenDetails(video)}
-          className="mt-1 rounded-lg border border-slate-200 bg-white py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-        >
-          View Details
-        </button>
+        {video.tiktokUrl && (
+          <span className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-1.5 text-xs font-semibold text-slate-700 transition-colors group-hover:bg-slate-50">
+            Open on TikTok <ExternalLink className="h-3 w-3" />
+          </span>
+        )}
       </div>
-    </div>
+    </Wrapper>
   );
 }

@@ -31,19 +31,13 @@ export class KalodataApiError extends Error {
  */
 function buildAuthHeaders() {
   const apiKey = process.env.KALODATA_API_KEY;
-  const headerName = process.env.KALODATA_AUTH_HEADER;
+  // Defaults to the confirmed `secret-key` header, so a deployment only needs the key itself.
+  const headerName = process.env.KALODATA_AUTH_HEADER || 'secret-key';
   const scheme = process.env.KALODATA_AUTH_SCHEME;
 
   if (!apiKey) {
     throw new KalodataApiError(
       'KALODATA_API_KEY is not configured.',
-      { code: 'CONFIG' }
-    );
-  }
-  if (!headerName) {
-    throw new KalodataApiError(
-      'KALODATA_AUTH_HEADER is not configured. Set it in .env to the exact header name ' +
-        'specified by the authenticated Kalodata Open Center docs before using real-mode data.',
       { code: 'CONFIG' }
     );
   }

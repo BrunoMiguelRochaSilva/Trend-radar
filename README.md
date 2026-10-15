@@ -46,6 +46,28 @@ defaults but no real key.
 `KALODATA_AUTH_HEADER`/`KALODATA_AUTH_SCHEME` are already set correctly from the
 confirmed docs example — no further changes needed unless Kalodata's auth changes.
 
+## Deploy (one Node service, password-protected)
+
+The Express server serves the built site and the API together, so the app needs a host
+that **runs Node** — a static host (Netlify, Vercel static, GitHub Pages, shared hosting)
+only publishes the pages, and the products never load because there is no server holding
+the API key.
+
+On [Render](https://render.com) (or any Node host): **New → Web Service** → connect this
+GitHub repo, then:
+
+| Setting | Value |
+|---|---|
+| Build command | `npm install --include=dev && npm run build` |
+| Start command | `npm start` |
+| Environment variable `KALODATA_API_KEY` | your Kalodata key |
+| Environment variable `APP_PASSWORD` | a password of your choice |
+
+`USE_MOCK_DATA` defaults to live data and `KALODATA_AUTH_HEADER` to `secret-key`, so
+those two are the only variables needed. The browser asks for the password once (any
+username). The query cache lives in each browser, so a new device or the deployed site's
+first visit fetches (and pays for) a query once before repeats become free.
+
 ## Kalodata endpoints used
 
 All calls are made server-side from `server/services/kalodataService.js`:
